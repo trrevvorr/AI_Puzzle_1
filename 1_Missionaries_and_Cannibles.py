@@ -23,6 +23,8 @@ class River(object):
 		self.boat = 'l'
 		# keep track of all the states so the solution can be printed 
 		self.past_states = []
+		# these are dead end states
+		self.trash_states = []
 		# store all valid states in order to check if an action is valid
 		self.valid_states = [[3,3,0,0], [3,2,0,1], [3,1,0,2], [3,0,0,3],
 							[2,2,1,1], 
@@ -56,15 +58,15 @@ class River(object):
 		m0c2 = self.RESULT(s,'m0c2')
 
 		# check if the moves are valid
-		if m1c1[:4] in self.valid_states and m1c1 not in self.past_states:
+		if m1c1[:4] in self.valid_states and m1c1 not in self.past_states and m1c1 not in self.trash_states:
 			valid_actions.append('m1c1')
-		if m1c0[:4] in self.valid_states and m1c0 not in self.past_states:
+		if m1c0[:4] in self.valid_states and m1c0 not in self.past_states and m1c0 not in self.trash_states:
 			valid_actions.append('m1c0')
-		if m2c0[:4] in self.valid_states and m2c0 not in self.past_states:
+		if m2c0[:4] in self.valid_states and m2c0 not in self.past_states and m2c0 not in self.trash_states:
 			valid_actions.append('m2c0')
-		if m0c1[:4] in self.valid_states and m0c1 not in self.past_states:
+		if m0c1[:4] in self.valid_states and m0c1 not in self.past_states and m0c1 not in self.trash_states:
 			valid_actions.append('m0c1')
-		if m0c2[:4] in self.valid_states and m0c2 not in self.past_states:
+		if m0c2[:4] in self.valid_states and m0c2 not in self.past_states and m0c2 not in self.trash_states:
 			valid_actions.append('m0c2')
 
 		return valid_actions
@@ -122,15 +124,18 @@ class River(object):
 	def SIMULATE(self):
 		while not self.FINAL(self.state):
 			# self.Visualize(self.state)
+			# save the current state to the list of past states
+			self.past_states.append(self.state)
 			# find the valid actions and pick a random one
 			valid_actions = self.ACTIONS(self.state)
 			if len(valid_actions)==0:
-				# break if there are no valid options
-				break
+				# backtrack if there are no valid options
+				print 'BACKTRACK!'
+				self.BACKTRACK()
+				continue
 			random.shuffle(valid_actions)
 			next_action = valid_actions[0]
-			# save the current state to the list of states
-			self.past_states.append(self.state)
+			
 			# take the choosen action
 			self.state = self.RESULT(self.state, next_action)
 			self.MOVE_BOAT()
@@ -146,6 +151,15 @@ class River(object):
 			print "NO VALID ACTIONS FOUND"
 
 
+	def BACKTRACK(self):
+		# remove the dead end state and add it to the trash states
+		dead_end = self.past_states.pop(-1)
+		self.trash_states.append(dead_end)
+		# move back one state
+		self.state = self.past_states.pop(-1)
+		self.MOVE_BOAT()
+
+	# PURPOSE: simply sqitches the boat's possition from r to l or l to r
 	def MOVE_BOAT(self):
 		if self.boat == 'l': self.boat='r'
 		elif self.boat == 'r': self.boat='l'
