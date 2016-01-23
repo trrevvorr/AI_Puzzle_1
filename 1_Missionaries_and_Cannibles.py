@@ -8,20 +8,21 @@ import random
 class River(object):
 	"""docstring for Puzzle"""
 	def __init__(self):
-		# each state takes the format [ml, cl, mr, cr] where:
+		# each state takes the format [ml, cl, mr, cr] or [ml, cl, mr, cr, b] where:
 			# ml = number of missionaries on the left bank
 			# cl = number of cannibals on the left bank
 			# mr = number of missionaries on the right bank
 			# cr = number of cannibals on the right bank
+			# b = possition of boat (either l or r) [OPTIONAL]
 
 		# Initial state is all misionaries and cannibals on the left side
-		self.state = [3,3,0,0]
+		self.state = [3,3,0,0,'l']
 		# how many times the boat crosses the river
 		self.moves = 0
 		# a boat can either be on the left (l) side or the right (r) side
 		self.boat = 'l'
 		# keep track of all the states so the solution can be printed 
-		self.past_states = [[0,0,0,0],[0,0,0,0]]
+		self.past_states = []
 		# store all valid states in order to check if an action is valid
 		self.valid_states = [[3,3,0,0], [3,2,0,1], [3,1,0,2], [3,0,0,3],
 							[2,2,1,1], 
@@ -35,6 +36,11 @@ class River(object):
 							  'm0c2':[0,-2,0,2]} # move two cannibal
 
 
+	# PURPOSE: Returns a list of all valid actions that can be performed at the 
+	# given state. To be "valid", a state must be a 1) member of the valid_states 
+	# set and 2) not be in the set of past_states
+	# INPUT: state in the format: [ml,cl,mr,cr] or [ml,cl,mr,cr,b]
+	# OUTPUT: list of actions in the form 'mxcy' where x,y = [0,2]
 	def ACTIONS(self, s):
 		valid_actions = []
 
@@ -50,35 +56,46 @@ class River(object):
 		m0c2 = self.RESULT(s,'m0c2')
 
 		# check if the moves are valid
-		if m1c1 in self.valid_states and m1c1 != self.past_states[-1] and m1c1 != self.past_states[-2]:
+		if m1c1[:4] in self.valid_states and m1c1 not in self.past_states:
 			valid_actions.append('m1c1')
-		if m1c0 in self.valid_states and m1c0 != self.past_states[-1] and m1c0 != self.past_states[-2]:
+		if m1c0[:4] in self.valid_states and m1c0 not in self.past_states:
 			valid_actions.append('m1c0')
-		if m2c0 in self.valid_states and m2c0 != self.past_states[-1] and m2c0 != self.past_states[-2]:
+		if m2c0[:4] in self.valid_states and m2c0 not in self.past_states:
 			valid_actions.append('m2c0')
-		if m0c1 in self.valid_states and m0c1 != self.past_states[-1] and m0c1 != self.past_states[-2]:
+		if m0c1[:4] in self.valid_states and m0c1 not in self.past_states:
 			valid_actions.append('m0c1')
-		if m0c2 in self.valid_states and m0c2 != self.past_states[-1] and m0c2 != self.past_states[-2]:
+		if m0c2[:4] in self.valid_states and m0c2 not in self.past_states:
 			valid_actions.append('m0c2')
 
 		return valid_actions
 
-
+	# PURPOSE: returns the resulting state given the a state and the action to 
+	# be perfomed on it
+	# INPUT: can be passed a state in the form: [ml,cl,mr,cr] or [ml,cl,mr,cr,b]
+	# OUTPUT: returns a state in the form: [ml,cl,mr,cr,b]
 	def RESULT(self, s, a):
 		action_array = self.avail_actions[a]
 		new_state = s[:]
 
-		# if the boat is moving from left to right
-		if self.boat == 'l': 
+		# Deal with possition of boat and format of passed state
+		if len(s) == 5:
+			boat_state = s[4]
+		else:
+			boat_state = self.boat
+			new_state.append(boat_state)
+
+		# Take action on passed state
+		# if the boat is moving from LEFT TO RIGHT
+		if boat_state == 'l': 
 			for i in xrange(4):
 				new_state[i] = new_state[i] + action_array[i]
-
-		# if the boat is moving from right to left
-		elif self.boat == 'r': 
+			new_state[4] = 'r'
+		# if the boat is moving from RIGHT TO LEFT
+		elif boat_state == 'r': 
 			for i in xrange(4):
 				new_state[i] = new_state[i] - action_array[i]
-		else:
-			print 'ERROR: BOAT IN INVAlID POSSITION: %s' % self.boat
+			new_state[4] = 'l'
+		else: print 'ERROR: BOAT IN INVALID POSSITION: %s' % self.boat
 
 		return new_state
 
@@ -104,6 +121,7 @@ class River(object):
 
 	def SIMULATE(self):
 		while not self.FINAL(self.state):
+			# self.Visualize(self.state)
 			# find the valid actions and pick a random one
 			valid_actions = self.ACTIONS(self.state)
 			if len(valid_actions)==0:
@@ -112,7 +130,7 @@ class River(object):
 			random.shuffle(valid_actions)
 			next_action = valid_actions[0]
 			# save the current state to the list of states
-			self.past_states.append(self.state + [self.boat])
+			self.past_states.append(self.state)
 			# take the choosen action
 			self.state = self.RESULT(self.state, next_action)
 			self.MOVE_BOAT()
@@ -133,8 +151,10 @@ class River(object):
 		elif self.boat == 'r': self.boat='l'
 
 
+	# PURPOSE: return true if final state has been reached, false otherwise
+	# INPUT: accepts state s in either form: [ml,cl,mr,cr] or [ml,cl,mr,cr,b]
 	def FINAL(self,s):
-		if s == [0,0,3,3]:
+		if s[:4] == [0,0,3,3]:
 			return True
 		else:
 			return False
@@ -144,8 +164,10 @@ class River(object):
 ################################################################################
 ### MAIN
 ################################################################################
+random.seed()
 r1 = River()
 r1.SIMULATE()
+
 
 
 
