@@ -5,7 +5,7 @@
 # 01/22/2016
 import random
 
-class River(object):
+class MC_Puzle(object):
 	"""docstring for Puzzle"""
 	def __init__(self):
 		# each state takes the format [ml, cl, mr, cr] or [ml, cl, mr, cr, b] where:
@@ -31,7 +31,7 @@ class River(object):
 							[1,1,2,2],
 							[0,0,3,3], [0,1,3,2], [0,2,3,1], [0,3,3,0]]
 		# available actions to take, defaults to boat moving left to right
-		self.avail_actions = {'m1c1':[-1,-1,1,1], # move one missionary and one cannibal
+		self.legal_actions = {'m1c1':[-1,-1,1,1], # move one missionary and one cannibal
 							  'm1c0':[-1,0,1,0], # move one missionary
 							  'm2c0':[-2,0,2,0], # move two missionary
 							  'm0c1':[0,-1,0,1], # move one cannibal
@@ -76,9 +76,10 @@ class River(object):
 	# PURPOSE: returns the resulting state given the a state and the action to 
 	# be perfomed on it
 	# INPUT: can be passed a state in the form: [ml,cl,mr,cr] or [ml,cl,mr,cr,b]
+	# action must be passed in the form 'mxcy'
 	# OUTPUT: returns a state in the form: [ml,cl,mr,cr,b]
 	def RESULT(self, s, a):
-		action_array = self.avail_actions[a]
+		action_array = self.legal_actions[a]
 		new_state = s[:]
 
 		# Deal with possition of boat and format of passed state
@@ -104,6 +105,12 @@ class River(object):
 		return new_state
 
 
+	# PURPOSE: prints out state it is passed in a visual format
+	# passing an action is optional but doing so will print s as
+	# well as the resulting state after the action is taken
+	# FORMAT: m = missionarry, c = cannibal
+	# \~~~|
+	# /~~~|	<- river with boat on left bank
 	def VISUALIZE(self, s, a=[]):
 		tl,bl,tr,br = '|','|','|','|'
 		# used to draw boat direction
@@ -124,34 +131,60 @@ class River(object):
 			self.VISUALIZE(self.RESULT(s,a))
 
 
+	# PURPOSE: prints out the solution set (actions) in easy-to-understand sentences
+	# call once after the AI has finished finding the solution
+	def VERBALIZE(self):
+		turn_count = 1
+		print "== ACTIONS =="
+
+		# iterate through each state in past_states, deducing what action was taken
+		for i in xrange(len(self.past_states)-1):
+			old_state = self.past_states[i]
+			new_state = self.past_states[i+1]
+			# extract boat info
+			if old_state[4] == 'l':
+				boat_move = 'left to right'
+			else:
+				boat_move = 'right to left'
+			# extract move info
+			for action in self.legal_actions:
+				if new_state == self.RESULT(old_state, action):
+					break
+			# print the sentence
+			print 'Turn %d: The boat moved from %s carrying %s missionary(s) and %s cannibal(s)' % (turn_count, boat_move, action[1], action[3])
+			turn_count += 1
+
+
+	# PURPOSE: plays the puzzle game until it wins
+	# INPUT: none, it will begin the puzzle at the initial state
+	# OUTPUT: builds an array of "past_states" which are the states it visted
+	# on the way to the solution.
+	# Also builds trash_states array which are the dead-end states it encountered
 	def SIMULATE(self):
 		while not self.FINAL(self.state):
-			# self.VISUALIZE(self.state)
 			# save the current state to the list of past states
 			self.past_states.append(self.state)
-			# find the valid actions and pick a random one
+			# find the valid actions for the current state
 			valid_actions = self.ACTIONS(self.state)
+			# backtrack if there are no valid actions (dead-end)
 			if len(valid_actions)==0:
-				# backtrack if there are no valid options
-				# print 'BACKTRACK!'
 				self.BACKTRACK()
 				continue
+			# choose a random valid action
 			random.shuffle(valid_actions)
 			next_action = valid_actions[0]
-			
 			# take the choosen action
 			self.state = self.RESULT(self.state, next_action)
 			self.MOVE_BOAT()
+		# append the final state
+		self.past_states.append(self.state)
 
 		# print the resulting solution set
 		for s in self.past_states:
 			self.VISUALIZE(s)
-		self.VISUALIZE(self.state)
+		self.VERBALIZE()
 
-		if self.FINAL(self.state):
-			print "YOU WIN!"
-		else:
-			print "NO VALID ACTIONS FOUND"
+		print "YOU WIN!"
 
 
 	def BACKTRACK(self):
@@ -183,8 +216,8 @@ class River(object):
 ### MAIN
 ################################################################################
 random.seed()
-r1 = River()
-r1.SIMULATE()
+puzzle = MC_Puzle()
+puzzle.SIMULATE()
 
 
 
