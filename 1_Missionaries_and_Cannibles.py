@@ -36,6 +36,9 @@ class MC_Puzle(object):
 							  'm2c0':[-2,0,2,0], # move two missionary
 							  'm0c1':[0,-1,0,1], # move one cannibal
 							  'm0c2':[0,-2,0,2]} # move two cannibal
+		# for use in keeping track of the total cost of solution pathb
+		self.step_cost = 1
+		self.path_cost = 0
 
 
 	# PURPOSE: Returns a list of all valid actions that can be performed at the 
@@ -153,6 +156,7 @@ class MC_Puzle(object):
 			# print the sentence
 			print 'Turn %d: The boat moved from %s carrying %s missionary(s) and %s cannibal(s)' % (turn_count, boat_move, action[1], action[3])
 			turn_count += 1
+		print 'Path cost: %d' % self.path_cost
 
 
 	# PURPOSE: plays the puzzle game until it wins
@@ -160,7 +164,7 @@ class MC_Puzle(object):
 	# OUTPUT: builds an array of "past_states" which are the states it visted
 	# on the way to the solution.
 	# Also builds trash_states array which are the dead-end states it encountered
-	def SIMULATE(self):
+	def SOLVE(self):
 		while not self.FINAL(self.state):
 			# save the current state to the list of past states
 			self.past_states.append(self.state)
@@ -176,17 +180,18 @@ class MC_Puzle(object):
 			# take the choosen action
 			self.state = self.RESULT(self.state, next_action)
 			self.MOVE_BOAT()
+			self.path_cost += self.step_cost
 		# append the final state
 		self.past_states.append(self.state)
 
 		# print the resulting solution set
-		for s in self.past_states:
-			self.VISUALIZE(s)
+		# for s in self.past_states:
+		# 	self.VISUALIZE(s)
 		self.VERBALIZE()
 
-		print "YOU WIN!"
+		print "== YOU WIN! =="
 
-
+	# PURPOSE: moves back one state, so that the AI can take a different path to the solution
 	def BACKTRACK(self):
 		# remove the dead end state and add it to the trash states
 		dead_end = self.past_states.pop(-1)
@@ -194,6 +199,7 @@ class MC_Puzle(object):
 		# move back one state
 		self.state = self.past_states.pop(-1)
 		self.MOVE_BOAT()
+		self.path_cost -= self.step_cost
 
 
 	# PURPOSE: simply sqitches the boat's possition from r to l or l to r
@@ -217,7 +223,7 @@ class MC_Puzle(object):
 ################################################################################
 random.seed()
 puzzle = MC_Puzle()
-puzzle.SIMULATE()
+puzzle.SOLVE()
 
 
 
