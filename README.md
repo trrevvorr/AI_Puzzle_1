@@ -1,7 +1,8 @@
-# AI_Puzzle_1
-Puzzle Assignment 1 for CS 5400 - Artificial Intelligence (Missionaries and Cannibals problem)
+# AI_Homework_2
+Exercise 2 for CS 5400 - Artificial Intelligence (Missionaries and Cannibals problem)
 
 ##HOW TO USE PROGRAM
+*Build with Python 2.7*
 To find the solution to the puzzle discribed below, simply build and run the program. The program will print out all the actions caried out. If you wish to see a visual representation of the states, uncomment lines 188 and 189. 
 
 ##Puzzle Statement (from the book)
